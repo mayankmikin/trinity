@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLO Live Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">YOLO Live Detection</h1>
+        <div class="d-flex justify-content-center my-4">
+            <button id="scanWebcamBtn" class="btn btn-primary me-2">Scan Webcams</button>
+            <select id="webcamSelect" class="form-select me-2" style="width: auto;"></select>
+            <button id="startFeedBtn" class="btn btn-success me-2" disabled>Start Live Feed</button>
+            <button id="stopFeedBtn" class="btn btn-danger" disabled>Stop Live Feed</button>
+        </div>
+        <div class="text-center">
+            <img id="videoFeed" src="" class="img-fluid border">
+        </div>
+    </div>
+
+    <script>
+        const scanWebcamBtn = document.getElementById('scanWebcamBtn');
+        const webcamSelect = document.getElementById('webcamSelect');
+        const startFeedBtn = document.getElementById('startFeedBtn');
+        const stopFeedBtn = document.getElementById('stopFeedBtn');
+        const videoFeed = document.getElementById('videoFeed');
+
+        scanWebcamBtn.addEventListener('click', async () => {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(device => device.kind === 'videoinput');
+            
+            webcamSelect.innerHTML = '';
+            videoDevices.forEach((device, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.text = device.label || `Camera ${index + 1}`;
+                webcamSelect.appendChild(option);
+            });
+
+            if (videoDevices.length > 0) {
+                startFeedBtn.disabled = false;
+            }
+        });
+
+        startFeedBtn.addEventListener('click', () => {
+            const selectedCameraId = webcamSelect.value;
+            if (selectedCameraId !== null) {
+                videoFeed.src = `/video_feed/${selectedCameraId}`;
+                startFeedBtn.disabled = true;
+                stopFeedBtn.disabled = false;
+                scanWebcamBtn.disabled = true;
+                webcamSelect.disabled = true;
+            }
+        });
+
+        stopFeedBtn.addEventListener('click', () => {
+            const selectedCameraId = webcamSelect.value;
+            if (selectedCameraId !== null) {
+                videoFeed.src = "";
+                fetch(`/stop_feed/${selectedCameraId}`);
+                startFeedBtn.disabled = false;
+                stopFeedBtn.disabled = true;
+                scanWebcamBtn.disabled = false;
+                webcamSelect.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
